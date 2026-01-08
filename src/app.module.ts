@@ -8,6 +8,7 @@ import statusMonitorConfig from './config/statusMonitor';
 import { TasksModule } from './schedule/tasks.module'
 import { FrontendModule } from './services/frontend/frontend.module'
 import { SynchronizerModule } from './synchronizer/synchronizer.module'
+import { ParserModule } from './parser/parser.module'
 
 @Module({
     imports: [
@@ -32,6 +33,7 @@ import { SynchronizerModule } from './synchronizer/synchronizer.module'
         TasksModule,
         FrontendModule,
         SynchronizerModule,
+        ParserModule,
     ],
     controllers: [],
     providers: [],

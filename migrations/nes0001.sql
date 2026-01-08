@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS lp_claim_reward (
     withdraw_amount      UINT256 NOT NULL,
     to_prediction_amount UINT256 NOT NULL,
     lp_type              SMALLINT NOT NULL,
-    block_number         UINT256 NOT NULL,,
+    block_number         UINT256 NOT NULL,
     tx_hash              VARCHAR NOT NULL UNIQUE,
     log_index            INT DEFAULT 0,
     created_at           TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
@@ -216,8 +216,8 @@ CREATE TABLE IF NOT EXISTS liquidity_added (
     lp_type    SMALLINT NOT NULL,
     tx_hash    VARCHAR NOT NULL UNIQUE,
     log_index  INT DEFAULT 0,
-    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
-    updated_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP  -- 更新时间
+    created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
+    updated_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP  -- 更新时间
 );
 CREATE INDEX IF NOT EXISTS idx_liquidity_added_token ON liquidity_added(token_id);
 
@@ -228,8 +228,8 @@ CREATE TABLE IF NOT EXISTS tokens_burned (
     block_number  UINT256 NOT NULL,
     tx_hash       VARCHAR NOT NULL UNIQUE,
     log_index     INT DEFAULT 0,
-    created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
-    updated_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP  -- 更新时间
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 入库时间
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- 更新时间
 );
 
 CREATE TABLE IF NOT EXISTS deposit_usdt (
@@ -269,8 +269,8 @@ CREATE TABLE IF NOT EXISTS withdraw (
     block_number     UINT256 NOT NULL,
     tx_hash          VARCHAR NOT NULL UNIQUE,
     log_index        INT DEFAULT 0,
-    created_at       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
-    updated_at       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP  -- 更新时间
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 入库时间
+    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- 更新时间
 );
 CREATE INDEX IF NOT EXISTS idx_withdraw_token ON withdraw(token_address);
 
@@ -287,17 +287,17 @@ CREATE TABLE IF NOT EXISTS node_reward (
     child_token_fee_reward   UINT256 NOT NULL,
     prediction_reward        UINT256 NOT NULL,
     is_exit                  BOOLEAN DEFAULT FALSE,
-    created_at               TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
-    updated_at               TIMESTAMP    DEFAULT CURRENT_TIMESTAMP  -- 更新时间
+    created_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 入库时间
+    updated_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- 更新时间
 );
-CREATE INDEX IF NOT EXISTS idx_node_reward ON node_reward(my_address);
+CREATE INDEX IF NOT EXISTS idx_node_reward ON node_reward(address);
 
 CREATE TABLE IF NOT EXISTS node_reward_record (
     guid                VARCHAR PRIMARY KEY,
     address             VARCHAR(42) NOT NULL,
     reward              UINT256 NOT NULL,
     reward_type         SMALLINT NOT NULL,
-    created_at          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
-    updated_at          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP  -- 更新时间
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 入库时间
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- 更新时间
 );
-CREATE INDEX IF NOT EXISTS idx_node_reward_record ON node_reward_record(my_address);
+CREATE INDEX IF NOT EXISTS idx_node_reward_record ON node_reward_record(address);

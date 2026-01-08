@@ -30,7 +30,6 @@ export class SynchronizerService {
         private readonly blocksRepository: Repository<BlocksEntity>,
         @InjectRepository(ContractEventEntity)
         private readonly contractEventEntityRepository: Repository<ContractEventEntity>,
-        private readonly httpService: HttpService,
         @InjectMetric('stark_block')
         public metricStartBlock: Gauge<string>,
         @InjectMetric('end_block')
