@@ -16,6 +16,9 @@ import {LpRoundStakingOverEntity} from "./lp_round_staking_over.entity";
 import {OutOfAchieveReturnsNodeExitEntity} from "./out_of_achieve_returns_node_exit.entity";
 import {TokensBurnedEntity} from "./tokens_burned.entity";
 import {WithdrawEntity} from "./withdraw.entity";
+import {BindInviterEntity} from "./bindInviter.entity";
+import {PurchaseNodesEntity} from "./purchasenodes.entity";
+import {DistributeNodeRewardsEntity} from "./distributenoderewards.entity";
 
 
 const entities = [
@@ -36,7 +39,10 @@ const entities = [
     LpRoundStakingOverEntity,
     OutOfAchieveReturnsNodeExitEntity,
     TokensBurnedEntity,
-    WithdrawEntity
+    WithdrawEntity,
+    BindInviterEntity,
+    PurchaseNodesEntity,
+    DistributeNodeRewardsEntity
 ];
 
 export {
@@ -57,7 +63,10 @@ export {
     LpRoundStakingOverEntity,
     OutOfAchieveReturnsNodeExitEntity,
     TokensBurnedEntity,
-    WithdrawEntity
+    WithdrawEntity,
+    BindInviterEntity,
+    PurchaseNodesEntity,
+    DistributeNodeRewardsEntity
 };
 
 export default entities;

@@ -180,6 +180,17 @@ CREATE TABLE IF NOT EXISTS lp_round_staking_over (
 );
 CREATE INDEX IF NOT EXISTS idx_lp_round_staking_over_provider ON lp_round_staking_over(liquidity_provider);
 
+CREATE TABLE bind_inviter (
+    guid            VARCHAR(100) PRIMARY KEY,      -- tx_hash + log_index，全局唯一
+    inviter         VARCHAR(42) NOT NULL,           -- 邀请人地址
+    invitee         VARCHAR(42) NOT NULL,           -- 被邀请人地址
+    block_number    BIGINT NOT NULL,                -- 区块高度
+    tx_hash         VARCHAR(66) NOT NULL,           -- 交易 hash
+    log_index       INTEGER NOT NULL,               -- 日志索引（防重复关键）
+    created_at         TIMESTAMP    DEFAULT CURRENT_TIMESTAMP, -- 入库时间
+    updated_at         TIMESTAMP    DEFAULT CURRENT_TIMESTAMP  -- 更新时间
+);
+
 CREATE TABLE IF NOT EXISTS lp_claim_reward (
     guid                 VARCHAR PRIMARY KEY,
     liquidity_provider   VARCHAR(42) NOT NULL,
@@ -274,30 +285,164 @@ CREATE TABLE IF NOT EXISTS withdraw (
 );
 CREATE INDEX IF NOT EXISTS idx_withdraw_token ON withdraw(token_address);
 
-CREATE TABLE IF NOT EXISTS node_reward (
-    guid                     VARCHAR PRIMARY KEY,
-    address                  VARCHAR(42) NOT NULL,
-    invite_address           VARCHAR(42) NOT NULL,
-    node_type                SMALLINT NOT NULL,
-    normal_reward            UINT256 NOT NULL,
-    direct_reward            UINT256 NOT NULL,
-    team_reward              UINT256 NOT NULL,
-    same_level_reward        UINT256 NOT NULL,
-    token_fee_reward         UINT256 NOT NULL,
-    child_token_fee_reward   UINT256 NOT NULL,
-    prediction_reward        UINT256 NOT NULL,
-    is_exit                  BOOLEAN DEFAULT FALSE,
-    created_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 入库时间
-    updated_at               TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- 更新时间
-);
-CREATE INDEX IF NOT EXISTS idx_node_reward ON node_reward(address);
 
-CREATE TABLE IF NOT EXISTS node_reward_record (
-    guid                VARCHAR PRIMARY KEY,
-    address             VARCHAR(42) NOT NULL,
-    reward              UINT256 NOT NULL,
-    reward_type         SMALLINT NOT NULL,
-    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 入库时间
-    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- 更新时间
+-- 语言配置表 --
+CREATE TABLE IF NOT EXISTS languages (
+    guid           TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    language_name  VARCHAR DEFAULT 'zh',
+    created        INTEGER CHECK (created > 0),
+    updated        INTEGER CHECK (updated > 0)
 );
-CREATE INDEX IF NOT EXISTS idx_node_reward_record ON node_reward_record(address);
+CREATE INDEX IF NOT EXISTS idx_languages ON languages (guid);
+
+-- 资产配置表 --
+CREATE TABLE IF NOT EXISTS asset (
+    guid                 TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    token_name           VARCHAR DEFAULT 'Tether USDT',
+    token_symbol         VARCHAR DEFAULT 'USDT',
+    token_address        VARCHAR NOT NULL,
+    token_decimal        SMALLINT NOT NULL,
+    created              INTEGER CHECK (created > 0),
+    updated              INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_asset_guid ON asset (guid);
+
+-- 用户表 --
+CREATE TABLE if NOT EXISTS users (
+    guid             TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    invite_me_guid   VARCHAR(255)  NOT NULL,
+    user_name        VARCHAR(100) NOT NULL,
+    level            SMALLINT DEFAULT 0,
+    avatar           VARCHAR(100) DEFAULT '',
+    email            VARCHAR(100) DEFAULT '',
+    address          VARCHAR(100) NOT NULL,
+    invitation_code  VARCHAR(100) DEFAULT '',
+    created          INTEGER CHECK (created > 0),
+    updated          INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_users_guid ON users (guid);
+CREATE INDEX IF NOT EXISTS idx_users_address ON users (address);
+CREATE INDEX IF NOT EXISTS idx_users_invitation_code ON users (invitation_code);
+
+-- 质押节点配置表 --
+CREATE TABLE if NOT EXISTS staking_node (
+    guid             TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    node_level       VARCHAR(32) DEFAULT 'T1',
+    node_amount      UINT256 NOT NULL,
+    income_percent   SMALLINT DEFAULT 5,
+    staking_period   SMALLINT DEFAULT 2,
+    language_guid    VARCHAR(500) NOT NULL,
+    created          INTEGER CHECK (created > 0),
+    updated          INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_staking_node_guid ON staking_node (guid);
+
+CREATE TABLE if NOT EXISTS staking_node_language (
+    guid                TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    staking_node_guid   VARCHAR(500) NOT NULL,
+    node_name           VARCHAR(32) DEFAULT 'Data Node',
+    node_describe       TEXT DEFAULT '',
+    language_guid       VARCHAR(500) NOT NULL,
+    created             INTEGER CHECK (created > 0),
+    updated             INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_staking_node_language_staking_node_guid ON staking_node_language (staking_node_guid);
+CREATE INDEX IF NOT EXISTS idx_staking_node_language_language_guid ON staking_node_language (language_guid);
+
+-- 质押节点团体收益配置表 --
+CREATE TABLE if NOT EXISTS staking_node_team_config (
+    guid              TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    node_guid         VARCHAR(500) NOT NULL,
+    team_level        VARCHAR(32) DEFAULT 'S1',
+    active_amount     UINT256 NOT NULL,
+    performance_need  UINT256 NOT NULL,
+    income_percent    SMALLINT DEFAULT 5,
+    child_coin_amount UINT256 NOT NULL,
+    created           INTEGER CHECK (created > 0),
+    updated           INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_staking_node_team_config_guid ON staking_node_team_config (guid);
+
+-- 节点配置表 --
+CREATE TABLE if NOT EXISTS node (
+    guid                 TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    buy_node_amount      UINT256 NOT NULL,
+    staking_node_guid    VARCHAR(500) NOT NULL,
+    cho_trade_fee        SMALLINT DEFAULT 5,
+    cho_trade_profit     SMALLINT DEFAULT 5,
+    child_coin_fee      SMALLINT DEFAULT 5,
+    created              INTEGER CHECK (created > 0),
+    updated              INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_node_guid ON node(guid);
+
+CREATE TABLE if NOT EXISTS node_language (
+    guid                TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    node_guid           VARCHAR(500) NOT NULL,
+    node_name           VARCHAR(32) DEFAULT 'Data Node',
+    node_describe       TEXT DEFAULT '',
+    language_guid       VARCHAR(500) NOT NULL,
+    created             INTEGER CHECK (created > 0),
+    updated             INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_node_language_staking_node_guid ON node_language (node_guid);
+CREATE INDEX IF NOT EXISTS idx_node_language_language_guid ON node_language (language_guid);
+
+-- 用户关系构建 --
+CREATE TABLE if NOT EXISTS user_relation (
+    guid                 TEXT PRIMARY KEY DEFAULT replace(uuid_generate_v4()::text, '-', ''),
+    user_guid            VARCHAR(255) NOT NULL,
+    parent_guid          VARCHAR(255) NOT NULL,
+    parent_guids         JSON,
+    created              INTEGER CHECK (created > 0),
+    updated              INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_user_relation_guid ON user_relation(guid);
+CREATE INDEX IF NOT EXISTS idx_user_relation_user_guid ON user_relation(user_guid);
+
+-- 质押和购买节点记录 --
+CREATE TABLE if NOT EXISTS buy_staking_node (
+    guid                    VARCHAR(255) NOT NULL DEFAULT replace((uuid_generate_v4())::text, '-'::text, ''::text),
+    user_guid               VARCHAR(255) NOT NULL,
+    token_guid              VARCHAR(255) NOT NULL,
+    staking_node_guid       VARCHAR(255) NOT NULL,
+    staking_node_type       SMALLINT NOT NULL,             -- 1:staking; 2:node --
+    tx_hash                 VARCHAR(255) NOT NULL,
+    block_number            UINT256 NOT NULL DEFAULT 0,
+    amount                  UINT256 NOT NULL DEFAULT 0,
+    created                 INTEGER CHECK (created > 0),
+    updated                 INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_buy_staking_node_user_guid ON buy_staking_node(user_guid);
+
+-- 质押和节点收益(合计) --
+CREATE TABLE if NOT EXISTS staking_node_income (
+    guid                    VARCHAR(255) NOT NULL DEFAULT replace((uuid_generate_v4())::text, '-'::text, ''::text),
+    user_guid               VARCHAR(255) NOT NULL,
+    node_type               SMALLINT NOT NULL,             -- 1:super node; 2: distributed node; 3:cluster node --
+    income_category         SMALLINT NOT NULL,             -- 1:static; 2:direct; 3: team; 4: trading --
+    amount                  UINT256 NOT NULL DEFAULT 0,
+    status                  SMALLINT NOT NULL DEFAULT 0,   --0: unclaimed; 1:claimed---
+    created                 INTEGER CHECK (created > 0),
+    updated                 INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_staking_node_income_user_guid ON staking_node_income(user_guid);
+
+-- 质押和节点收益记录 --
+CREATE TABLE if NOT EXISTS staking_node_record (
+    guid                    VARCHAR(255) NOT NULL DEFAULT replace((uuid_generate_v4())::text, '-'::text, ''::text),
+    user_guid               VARCHAR(255) NOT NULL,
+    token_guid              VARCHAR(255) NOT NULL,
+    node_guid               VARCHAR(255) NOT NULL,
+    tx_hash                 VARCHAR(255) NOT NULL,
+    block_number            UINT256 NOT NULL DEFAULT 0,
+    node_type               SMALLINT NOT NULL,             -- 1:super node; 2: distributed node; 3:cluster node --
+    income_category         SMALLINT NOT NULL,             -- 1:static; 2:direct; 3: team; 4: trading --
+    amount                  UINT256 NOT NULL DEFAULT 0,
+    status                  SMALLINT NOT NULL DEFAULT 0,   --0: unclaimed; 1:claimed---
+    created                 INTEGER CHECK (created > 0),
+    updated                 INTEGER CHECK (updated > 0)
+);
+CREATE INDEX IF NOT EXISTS idx_staking_node_record_user_guid ON staking_node_record(user_guid);
+CREATE INDEX IF NOT EXISTS idx_staking_node_record_node_guid ON staking_node_record(node_guid);
+
